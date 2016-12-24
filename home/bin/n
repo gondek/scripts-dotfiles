@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -e
+export N_PREFIX="$HOME/.n"
+$HOME/.n/bin/n $@

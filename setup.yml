@@ -1,0 +1,85 @@
+---
+- connection: local
+  hosts: localhost
+  vars:
+    user: alex
+  tasks:
+
+  # dotfiles and static files
+  ###########################
+  - name: copy home directory
+    copy:
+      src: home/
+      dest: ~/
+  - name: chmod home/bin scripts
+    file:
+      path: "{{ item }}"
+      mode: 0755
+    with_fileglob:
+      - ~/bin/*
+      - ~/.config/autostart/*
+
+  # apt packages
+  ##############
+  - name: update apt cache
+    become: yes
+    apt:
+      update_cache: yes
+  - name: install apt packages
+    become: yes
+    apt:
+      name: "{{ item }}"
+      state: latest
+    with_items:
+    # programs
+    - ack-grep
+    - audacity
+    - curl
+    - chromium-browser
+    - fish
+    - gimp
+    - git
+    - handbrake
+    - imagemagick
+    - libreoffice
+    - nautilus-dropbox
+    - pavucontrol
+    - python-pip
+    - shutter
+    - silversearcher-ag
+    - sound-juicer
+    - texlive
+    - texmaker
+    - transmission
+    - vlc
+    - wget
+    - xournal
+    # libraries / dependencies
+    - ruby-dev
+    - build-essential
+    - libssl-dev
+    - libreadline-dev
+    - zlib1g-dev
+
+  # pip packages
+  ##############
+  - name: pip packages
+    become: yes
+    pip:
+      name: "{{ item }}"
+    with_items:
+    - eyeD3
+
+  # install n (node version management)
+  - name: download n (node version manager)
+    git:
+      repo: https://github.com/tj/n.git
+      dest: ~/.n
+
+  # make fish default shell
+  #########################
+  - name: make fish default shell
+    become: yes
+    user:
+      name: "{{ user }}"
+      shell: /usr/bin/fish

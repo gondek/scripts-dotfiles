@@ -1,0 +1,72 @@
+#!/usr/bin/env ruby
+# Script to help setup song metadata
+# rubocop:disable LineLength
+
+STRING_STRIP_CHARS = '!,\(\)\''.freeze
+STRING_VALID_CHARS = "#{STRING_STRIP_CHARS}&\\w\\-".freeze
+
+REGEX_STRIP_CHARS = /[#{STRING_STRIP_CHARS}]/
+REGEX_FILE_FORMAT = /\d\d - (\w[#{STRING_VALID_CHARS} ]*[#{STRING_VALID_CHARS}]).mp3/
+
+def exit_error(message)
+  puts "Error: #{message}"
+  exit 1
+end
+
+def prompt_and_wrap_quotes(message)
+  print "#{message}> "
+  result = gets.strip
+  exit_error('invalid empty input') if result.empty?
+  "\"#{result}\""
+end
+
+def clean_filename(filename)
+  filename.gsub(REGEX_STRIP_CHARS, '').gsub(/[&]/, 'and')
+end
+
+def filename_valid?(name, expected_digit)
+  prefix = format '%02d - ', expected_digit
+  name.include?(prefix) && name.match(REGEX_FILE_FORMAT) && !name.match(/  /)
+end
+
+def verify_and_count_mp3s
+  number_prefix = 0
+  Dir.glob('*.mp3').sort.each do |filename|
+    number_prefix += 1
+    exit_error("Invalid filename #{filename}") unless filename_valid?(filename, number_prefix)
+  end
+  number_prefix
+end
+
+def set_album_metadata(artist, album, genre, total_songs)
+  system 'mkdir -p bak'
+  system 'cp *.mp3 ./bak'
+  system 'eyeD3 --remove-all *.mp3'
+  system "eyeD3 -a #{artist} -A #{album} -G #{genre} -N #{total_songs} *.mp3"
+  system 'eyeD3 --add-image cover.jpg:FRONT_COVER *.mp3'
+end
+
+def set_song_metadata
+  track_number = 0
+  Dir.glob('*.mp3').sort.each do |filename|
+    track_number += 1
+    title = filename.match(REGEX_FILE_FORMAT).captures[0].strip
+    system "eyeD3 -t \"#{title}\" -n #{track_number} \"#{filename}\""
+    if filename != clean_filename(filename)
+      system "mv \"#{filename}\" \"#{clean_filename(filename)}\""
+    end
+  end
+end
+
+def main
+  puts "Working in \"#{Dir.pwd}\""
+  exit_error('Missing cover.jpg') unless File.exist?('cover.jpg')
+  mp3_count = verify_and_count_mp3s
+  album = prompt_and_wrap_quotes 'Album'
+  artist = prompt_and_wrap_quotes 'Artist'
+  genre = prompt_and_wrap_quotes 'Genre'
+  set_album_metadata(artist, album, genre, mp3_count)
+  set_song_metadata
+end
+
+main

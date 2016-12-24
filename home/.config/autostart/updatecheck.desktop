@@ -1,0 +1,4 @@
+[Desktop Entry]
+Type=Application
+Name=updatecheck
+Exec=/usr/bin/aptdcon --refresh

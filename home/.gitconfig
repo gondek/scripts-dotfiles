@@ -1,0 +1,12 @@
+[user]
+	name = Alex Gondek
+	email = alexgondek@gmail.com
+[push]
+	default = simple
+[credential]
+	helper = cache --timeout=3600
+[alias]
+	ls = log --color --graph --pretty=format:'%Cgreen%h%Creset %C(yellow)(%cr)%<|(24)%Creset %s%Creset' --abbrev-commit
+	ll = log --color --graph --date=short --pretty=format:'%Cgreen%h%Creset %<(80,trunc)%s %C(yellow)(%an %cd) %+d %Creset' --abbrev-commit
+[commit]
+	gpgsign = true
