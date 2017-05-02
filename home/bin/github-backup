@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#pylint: disable=C0103, W0703, C0301
+# pylint: disable=C0103, W0703, C0301
 """Simple script to backup a user's own and starred GitHub repos"""
 
 import sys
@@ -12,7 +12,9 @@ from datetime import datetime
 
 DEFAULT_USERNAME = 'gondek'
 DEFAULT_LOCATION = '~/Desktop'
+DEFAULT_MAX_SIZE_KB = 50000
 TEMP_DIR_SUFFIX = 'github-backup' + datetime.now().strftime('%S%f')
+
 
 def get_github_json(user_agent, endpoint):
     """Get the response of a GitHub API endpoint as JSON"""
@@ -29,6 +31,7 @@ def get_github_json(user_agent, endpoint):
         print('Error getting JSON from: {}\n{}'.format(url, str(e)))
         sys.exit(1)
 
+
 def get_user_repos(username):
     """Get a user's own and starred repos"""
     print('Retrieving {}\'s repos (starred, owner, watching)'.format(username))
@@ -41,24 +44,31 @@ def get_user_repos(username):
         all_repos[repo['id']] = repo
     return list(all_repos.values())
 
-def clone_repos_to_directory(repos, directory):
+
+def clone_repos_to_directory(repos, directory, max_repo_size):
     """Clone all of the GitHub repos into a directory"""
     for repo in repos:
-        print('Cloning {}'.format(repo['full_name']))
-        subprocess.check_call(
-            'git clone {} {}'.format(repo['clone_url'], resolve_path(directory, repo['full_name'].replace('/', '-'))),
-            shell=True, stderr=subprocess.STDOUT, stdout=subprocess.DEVNULL
-        )
+        if repo['size'] > max_repo_size:
+            print('Skipping {} due to size ({} > {})'.format(repo['full_name'], repo['size'], max_repo_size))
+        else:
+            print('Cloning {}'.format(repo['full_name']))
+            subprocess.check_call(
+                'git clone {} {}'.format(repo['clone_url'], resolve_path(directory, repo['full_name'].replace('/', '-'))),
+                shell=True, stderr=subprocess.STDOUT, stdout=subprocess.DEVNULL
+            )
+
 
 def zip_directory(directory, filename):
     """Zip all the contents of a directory into the specified file"""
     print('Zipping {} into {}'.format(directory, filename))
     shutil.make_archive(filename.replace('.zip', ''), 'zip', directory)
 
+
 def remove_directory(directory):
     """Remove the specified directory"""
     print('Removing {}'.format(directory))
     shutil.rmtree(directory)
+
 
 def resolve_path(path, suffix=None):
     """Expand a file system path, with an optional suffix"""
@@ -66,27 +76,30 @@ def resolve_path(path, suffix=None):
         path = os.path.join(path, suffix)
     return os.path.abspath(os.path.expanduser(path))
 
-def verify_options(username, directory, tmp_directory, zip_file):
+
+def verify_options(username, directory, tmp_directory, zip_file, max_repo_size):
     """Display the script settings to the user and ask to continue"""
     print('Using username:\n    {}'.format(username))
-    print('Using directory:\n    {}'.format(directory))
-    print('Will create/use/destroy temp directory:\n {}'.format(tmp_directory))
+    print('Will create/use/destroy temp directory:\n    {}'.format(tmp_directory))
     print('Will zip all repos into:\n    {}'.format(zip_file))
+    print('Will ignore repos with a size larger than:\n    {} KB'.format(max_repo_size))
     return input("Type 'y' to continue or anything else to quit: ").lower() == 'y'
+
 
 def main():
     """Show usage, parse options, and run script"""
-    print('Usage: {} <username> <directory>\n'.format(sys.argv[0]))
+    print('Usage: {} <username> <directory> <maxRepoSizeKB>\n'.format(sys.argv[0]))
 
     args = dict(enumerate(sys.argv))
     username = args.get(1, DEFAULT_USERNAME)
     directory = resolve_path(args.get(2, DEFAULT_LOCATION))
+    max_repo_size = args.get(3, DEFAULT_MAX_SIZE_KB)
     tmp_directory = resolve_path(directory, TEMP_DIR_SUFFIX)
     zip_file = resolve_path(directory, '{}.zip'.format(datetime.now().strftime('%Y-%m-%d')))
 
-    if verify_options(username, directory, tmp_directory, zip_file):
+    if verify_options(username, directory, tmp_directory, zip_file, max_repo_size):
         print()
-        clone_repos_to_directory(get_user_repos(username), tmp_directory)
+        clone_repos_to_directory(get_user_repos(username), tmp_directory, max_repo_size)
         zip_directory(tmp_directory, zip_file)
         remove_directory(tmp_directory)
 
