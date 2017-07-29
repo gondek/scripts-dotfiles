@@ -10,6 +10,7 @@
 - activate firewall / security
 - change update settings to alert immediately
 - disable bluetooth on startup
+- install pomodoro timer app
 
 ## Browsers
 
