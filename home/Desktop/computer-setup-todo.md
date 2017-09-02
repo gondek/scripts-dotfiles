@@ -1,6 +1,7 @@
 ## General
 
 - change wallpaper
+- add profile icon and full name
 - install ssh keys and run `fix-permissions.sh`
 - install gpg key
 - IP blocklist
