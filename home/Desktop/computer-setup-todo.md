@@ -5,7 +5,7 @@
 - install gpg key
 - IP blocklist
 - install dell-1130 driver (which is actually the Samsung ML-2580)
-- configure launchers and panels
+- configure panel: app launchers, places, date (format `%I:%M %p - %a %B %d`), workspaces, showdesktop
 - install atom & atom packages: `apm stars --install`
 - activate firewall / security
 - change update settings to alert immediately
