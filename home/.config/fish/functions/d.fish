@@ -1,3 +1,3 @@
 function d
-  git diff -w --color-words $argv
+  git diff -w $argv
 end
