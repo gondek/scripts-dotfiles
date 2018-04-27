@@ -5,7 +5,7 @@
 - install ssh keys and run `fix-permissions.sh`
 - install gpg key
 - IP blocklist
-- install dell-1130 driver (which is actually the Samsung ML-2580)
+- install dell-1130 driver (use Samsung ML-2525, 2.0.0 driver)
 - configure panel: app launchers, places, trash, date (format `%I:%M %p - %A %B %d %Y`), workspaces, showdesktop
 - install atom & atom packages: `apm stars --install`
 - activate firewall / security
