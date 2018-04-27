@@ -15,6 +15,5 @@
 
 ## Browsers
 
-- sign into Firefox sync (bookmarks, extensions)
 - install uBlock origin
 - make duckduckgo default search engine
