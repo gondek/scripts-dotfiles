@@ -53,6 +53,7 @@
     - vlc
     - wget
     - xournal
+    - libimage-exiftool-perl
     # libraries / dependencies
     - ruby-dev
     - build-essential
