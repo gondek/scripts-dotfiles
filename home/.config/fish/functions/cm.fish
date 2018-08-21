@@ -1,3 +1,3 @@
 function cm
-  google-calendar-mailer ~/Dropbox/Lists/cm.js
+  google-calendar-mailer ~/Dropbox/Documents/cm.js
 end
