@@ -12,6 +12,7 @@
 - change update settings to alert immediately
 - disable bluetooth on startup
 - install pomodoro timer app
+- install flux / color management app
 
 ## Browsers
 
