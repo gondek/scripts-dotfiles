@@ -39,6 +39,7 @@
     - fish
     - gimp
     - git
+    - gnome-disk-utility
     - handbrake
     - imagemagick
     - libimage-exiftool-perl
