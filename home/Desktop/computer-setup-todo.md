@@ -18,3 +18,4 @@
 
 - install uBlock origin
 - make duckduckgo default search engine
+- set home page to projects status page
