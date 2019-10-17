@@ -20,60 +20,56 @@
 
   # apt packages
   ##############
-  - name: update apt cache
-    become: yes
-    apt:
-      update_cache: yes
   - name: install apt packages
     become: yes
     apt:
-      name: "{{ item }}"
+      update_cache: yes
       state: latest
-    with_items:
-    # programs
-    - ack-grep
-    - audacity
-    - curl
-    - chromium-browser
-    - ffmpeg
-    - fish
-    - gimp
-    - git
-    - gnome-disk-utility
-    - handbrake
-    - imagemagick
-    - libimage-exiftool-perl
-    - libreoffice
-    - nautilus-dropbox
-    - pavucontrol
-    - python-pip
-    - shutter
-    - silversearcher-ag
-    - sound-juicer
-    - texlive
-    - texmaker
-    - transmission
-    - vlc
-    - wget
-    - xournal
-    # libraries / dependencies
-    - build-essential
-    - ruby-dev
-    - libssl-dev
-    - libreadline-dev
-    - zlib1g-dev
+      name:
+      # programs
+      - ack-grep
+      - audacity
+      - curl
+      - chromium-browser
+      - ffmpeg
+      - fish
+      - gimp
+      - git
+      - gnome-disk-utility
+      - handbrake
+      - imagemagick
+      - libimage-exiftool-perl
+      - libreoffice
+      - nautilus-dropbox
+      - pavucontrol
+      - python-pip
+      - shutter
+      - silversearcher-ag
+      - sound-juicer
+      - texlive
+      - texmaker
+      - transmission
+      - vlc
+      - wget
+      - xournal
+      # libraries / dependencies
+      - build-essential
+      - ruby-dev
+      - libssl-dev
+      - libreadline-dev
+      - zlib1g-dev
 
   # pip packages
   ##############
   - name: pip packages
     become: yes
     pip:
-      name: "{{ item }}"
-    with_items:
-    - eyeD3
-    - youtube-dl
+      name:
+      - eyeD3
+      - youtube-dl
 
   # install n (node version management)
+  #########################
   - name: download n (node version manager)
     git:
       repo: https://github.com/tj/n.git
