@@ -37,6 +37,7 @@
       - git
       - gnome-disk-utility
       - handbrake
+      - htop
       - imagemagick
       - libimage-exiftool-perl
       - libreoffice
