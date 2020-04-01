@@ -30,7 +30,7 @@
       - ack-grep
       - audacity
       - curl
-      - chromium-browser
+      - eyed3
       - ffmpeg
       - fish
       - gimp
@@ -59,15 +59,6 @@
       - libssl-dev
       - libreadline-dev
       - zlib1g-dev
-
-  # pip packages
-  ##############
-  - name: pip packages
-    become: yes
-    pip:
-      name:
-      - eyeD3
-      - youtube-dl
 
   # install n (node version management)
   #########################
