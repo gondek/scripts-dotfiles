@@ -2,7 +2,7 @@
 # Script to help setup song metadata
 # rubocop:disable LineLength
 
-STRING_STRIP_CHARS = '!,\(\)\''.freeze
+STRING_STRIP_CHARS = ':!,\(\)\''.freeze
 STRING_VALID_CHARS = "#{STRING_STRIP_CHARS}&\\w\\-".freeze
 
 REGEX_STRIP_CHARS = /[#{STRING_STRIP_CHARS}]/
