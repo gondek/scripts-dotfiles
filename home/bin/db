@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-set -e
-dropbox stop
-dbus-launch dropbox start

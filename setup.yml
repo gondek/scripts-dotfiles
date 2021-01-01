@@ -30,35 +30,30 @@
       - ack-grep
       - audacity
       - curl
+      - elementary-xfce-icon-theme
       - eyed3
       - ffmpeg
+      - file-roller
       - fish
+      - fonts-powerline
       - gimp
       - git
       - gnome-disk-utility
+      - greybird-gtk-theme
       - handbrake
       - htop
       - imagemagick
       - libimage-exiftool-perl
       - libreoffice
-      - nautilus-dropbox
       - pavucontrol
       - python-pip
-      - shutter
       - silversearcher-ag
+      - software-properties-gtk
       - sound-juicer
-      - texlive
-      - texmaker
       - transmission
       - vlc
       - wget
       - xournal
-      # libraries / dependencies
-      - build-essential
-      - ruby-dev
-      - libssl-dev
-      - libreadline-dev
-      - zlib1g-dev
 
   # install n (node version management)
   #########################
