@@ -30,7 +30,6 @@
       - ack-grep
       - audacity
       - curl
-      - elementary-xfce-icon-theme
       - eyed3
       - ffmpeg
       - file-roller
@@ -39,7 +38,6 @@
       - gimp
       - git
       - gnome-disk-utility
-      - greybird-gtk-theme
       - handbrake
       - htop
       - imagemagick
@@ -47,7 +45,6 @@
       - libreoffice
       - pavucontrol
       - powerline
-      - python-pip
       - silversearcher-ag
       - software-properties-gtk
       - sound-juicer

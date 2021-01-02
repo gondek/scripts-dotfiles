@@ -2,21 +2,13 @@
     - Printer Driver (Dell-1130 / Samsung ML-1915, 2.0.0 / Samsung ML-2525, 2.0.0)
     - Dropbox
     - Activate firewall: `sudo ufw enable`
-    - Flux / color management app
+    - Redshift / Flux (color management app)
 - Startup configuration:
-    - "Session & Startup" > "Advanced" > "Launch GNOME Services at Startup"
-    - Uncomment `#greeter-hide-users=false` in `/etc/lightdm/lightdm.conf`
     - "Software & Updates" > "Updates" > automatically check for updates
 - Customization:
-    - Add keyboard shortcuts:
-        - Super+R: application finder
-        - Ctrl-Shift-T: open terminal
     - Add Wallpaper
+    - Add picture and full name to profile
     - Configure XFCE Panel: Firefox, Places, Date (format `%I:%M %p - %A %B %d %Y`), Trash, Workspaces, Show-Desktop
-    - "Appearance": "Theme" > "Greybird", "Icons" > "Xfce Darker"
-    - Disable system beep:
-        - `gsettings set org.gnome.desktop.sound event-sounds false`
-        - `su -` and `rmmod pcspkr ; echo "blacklist pcspkr" >>/etc/modprobe.d/blacklist.conf`
 - Browsers:
     - Install uBlock origin
     - Set search engine to DDG
