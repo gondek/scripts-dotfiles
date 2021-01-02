@@ -1,5 +1,5 @@
 - Manual installation & setup:
-    - Printer Driver (dell-1130 / Samsung ML-2525, 2.0.0)
+    - Printer Driver (Dell-1130 / Samsung ML-1915, 2.0.0)
     - Dropbox
     - Activate firewall: `sudo ufw enable`
     - Flux / color management app
