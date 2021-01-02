@@ -46,6 +46,7 @@
       - libimage-exiftool-perl
       - libreoffice
       - pavucontrol
+      - powerline
       - python-pip
       - silversearcher-ag
       - software-properties-gtk
