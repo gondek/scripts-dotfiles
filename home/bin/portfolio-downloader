@@ -1,0 +1,69 @@
+#!/usr/bin/env node
+
+const home = process.env['HOME'];
+const axios = require(home + '/.n/lib/node_modules/axios').default;
+const fs = require('fs');
+
+const wealthSimpleHost = "https://trade-service.wealthsimple.com";
+
+function exit_with_error(message, moreDetails) {
+    if (moreDetails) console.error(moreDetails + "\n");
+    console.error(message);
+    process.exit(1);
+}
+
+async function getAuthToken(credentials) {
+    return axios.post(`${wealthSimpleHost}/auth/login`, credentials)
+      .then((response) => {
+        const token = response.headers && response.headers['x-access-token'];
+        if (!token) {
+            exit_with_error("Did not find access token in auth response", response.headers);
+        }
+        return token;
+      })
+      .catch((e) => exit_with_error("Could not authenticate", e));
+}
+
+async function getPortfolioData(token, type, dataPath) {
+    return axios.get(`${wealthSimpleHost}/${type}`, {headers: {"Authorization": token}})
+      .then((response) => {
+        if (!response.data) {
+            exit_with_error("Did not find any RAW data in response for getPortfolioData @ " + type)
+        }
+        const portfolioData = dataPath ? response.data[dataPath] : response.data;
+        if (!portfolioData) {
+            exit_with_error("Did not find any PORTFOLIO data in response for getPortfolioData @ " + type, response.data)
+        }
+        return portfolioData;
+      })
+      .catch((e) => exit_with_error("getPortfolioData failed for getPortfolioData @ " + type, e));
+}
+
+async function main() {
+    if (process.argv.length != 6) {
+        exit_with_error(`Usage: ${process.argv[0]} ${process.argv[1]} <email> <password> <otp> <file>`);
+    }
+
+    const credentials = {
+        "email": process.argv[2],
+        "password": process.argv[3],
+        "otp": process.argv[4],
+    };
+    const token = await getAuthToken(credentials);
+
+    const orders = getPortfolioData(token, 'orders', "results");
+    const positions = getPortfolioData(token, 'account/positions', "results");
+    const forex = getPortfolioData(token, 'forex', null);
+
+    await Promise.all([orders, positions, forex])
+        .then(data => {
+            fs.writeFileSync(require('path').resolve(process.cwd(), process.argv[5]), JSON.stringify({
+                "orders": data[0],
+                "positions": data[1],
+                "forex": data[2]
+            }, null, 4))
+        })
+        .catch((e) => {exit_with_error("Could not aggregate responses", e)})
+}
+
+main();
