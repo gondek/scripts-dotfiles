@@ -57,11 +57,13 @@ async function main() {
 
     await Promise.all([orders, positions, forex])
         .then(data => {
-            fs.writeFileSync(require('path').resolve(process.cwd(), process.argv[5]), JSON.stringify({
+            const portfolioJson = JSON.stringify({
                 "orders": data[0],
                 "positions": data[1],
                 "forex": data[2]
-            }, null, 4))
+            }, null, 4);
+            const portfolioFile = `var portfolio = ${portfolioJson};`;
+            fs.writeFileSync(require('path').resolve(process.cwd(), process.argv[5]), portfolioFile);
         })
         .catch((e) => {exit_with_error("Could not aggregate responses", e)})
 }
