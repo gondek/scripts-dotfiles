@@ -39,33 +39,62 @@ async function getPortfolioData(token, type, dataPath) {
       .catch((e) => exit_with_error("getPortfolioData failed for getPortfolioData @ " + type, e));
 }
 
+async function getStocksData(token, stockIds) {
+    const maxStockRequests = 5;
+
+    const stocksData = {};
+
+    stockIds = [...new Set(stockIds)]; // remove duplicates
+
+    while (stockIds.length > 0) {
+        const currentStockIds = stockIds.splice(0, maxStockRequests);
+        const stockPromises = currentStockIds.map(id => getPortfolioData(token, `securities/${id}`));
+        await Promise.all(stockPromises)
+            .then(stocks => {
+                stocks.forEach(stock => {
+                    stocksData[stock.id] = stock;
+                })
+            })
+    }
+
+    return stocksData;
+}
+
 async function main() {
     if (process.argv.length != 6) {
-        exit_with_error(`Usage: ${process.argv[0]} ${process.argv[1]} <email> <password> <otp> <file>`);
+        exit_with_error(`Usage: ${process.argv[0]} ${process.argv[1]} <email> <password> <file> <otp>`);
     }
 
     const credentials = {
         "email": process.argv[2],
         "password": process.argv[3],
-        "otp": process.argv[4],
+        "otp": process.argv[5],
     };
+    const destinationFile = process.argv[4];
     const token = await getAuthToken(credentials);
 
     const orders = getPortfolioData(token, 'orders', "results");
     const positions = getPortfolioData(token, 'account/positions', "results");
     const forex = getPortfolioData(token, 'forex', null);
 
+    const portfolioData = {};
+
     await Promise.all([orders, positions, forex])
         .then(data => {
-            const portfolioJson = JSON.stringify({
-                "orders": data[0],
-                "positions": data[1],
-                "forex": data[2]
-            }, null, 4);
-            const portfolioFile = `var portfolio = ${portfolioJson};`;
-            fs.writeFileSync(require('path').resolve(process.cwd(), process.argv[5]), portfolioFile);
+            portfolioData.orders = data[0];
+            portfolioData.positions = data[1];
+            portfolioData.forex = data[2];
         })
-        .catch((e) => {exit_with_error("Could not aggregate responses", e)})
+        .catch((e) => {exit_with_error("Could not aggregate orders+positions+forex responses", e)})
+        .then(() => getStocksData(token, portfolioData.positions.map(p => p.id)))
+        .then((stocksData) => {
+            portfolioData.stocks = stocksData;
+        })
+        .catch((e) => {exit_with_error("Could not aggregate stock responses", e)})
+        .then(() => {
+            const portfolioFile = `var portfolio = ${JSON.stringify(portfolioData, null, 4)};`;
+            fs.writeFileSync(require('path').resolve(process.cwd(), destinationFile), portfolioFile);
+        });
 }
 
 main();
