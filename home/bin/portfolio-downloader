@@ -1,100 +1,137 @@
 #!/usr/bin/env node
 
-const home = process.env['HOME'];
-const axios = require(home + '/.n/lib/node_modules/axios').default;
-const fs = require('fs');
+const home = process.env.HOME
+const axios = require(home + '/.n/lib/node_modules/axios').default
+const fs = require('fs')
 
-const wealthSimpleHost = "https://trade-service.wealthsimple.com";
+const wealthSimpleHost = 'https://trade-service.wealthsimple.com'
 
-function exit_with_error(message, moreDetails) {
-    if (moreDetails) console.error(moreDetails + "\n");
-    console.error(message);
-    process.exit(1);
+function log (message) {
+  console.log(`[${(new Date()).toLocaleString()}] ${message}`)
 }
 
-async function getAuthToken(credentials) {
-    return axios.post(`${wealthSimpleHost}/auth/login`, credentials)
-      .then((response) => {
-        const token = response.headers && response.headers['x-access-token'];
-        if (!token) {
-            exit_with_error("Did not find access token in auth response", response.headers);
-        }
-        return token;
-      })
-      .catch((e) => exit_with_error("Could not authenticate", e));
+function exitWithError (message, moreDetails) {
+  if (moreDetails) console.error(moreDetails + '\n')
+  console.error(message)
+  process.exit(1)
 }
 
-async function getPortfolioData(token, type, dataPath) {
-    return axios.get(`${wealthSimpleHost}/${type}`, {headers: {"Authorization": token}})
-      .then((response) => {
-        if (!response.data) {
-            exit_with_error("Did not find any RAW data in response for getPortfolioData @ " + type)
-        }
-        const portfolioData = dataPath ? response.data[dataPath] : response.data;
-        if (!portfolioData) {
-            exit_with_error("Did not find any PORTFOLIO data in response for getPortfolioData @ " + type, response.data)
-        }
-        return portfolioData;
-      })
-      .catch((e) => exit_with_error("getPortfolioData failed for getPortfolioData @ " + type, e));
+async function getAuthToken (credentials) {
+  return axios.post(`${wealthSimpleHost}/auth/login`, credentials)
+    .then((response) => {
+      return response.headers['x-access-token']
+    })
+    .catch((e) => exitWithError('Could not authenticate', e))
 }
 
-async function getStocksData(token, stockIds) {
-    const maxStockRequests = 5;
+async function getPortfolioData (token, type, dataPath) {
+  return axios.get(`${wealthSimpleHost}/${type}`, { headers: { Authorization: token } })
+    .then((response) => {
+      const portfolioData = dataPath ? response.data[dataPath] : response.data
+      return portfolioData
+    })
+    .catch((e) => exitWithError('getPortfolioData failed for getPortfolioData @ ' + type, e))
+}
 
-    const stocksData = {};
+async function getBaseData (token) {
+  const orders = getPortfolioData(token, 'orders', 'results')
+  const positions = getPortfolioData(token, 'account/positions', 'results')
+  const forex = getPortfolioData(token, 'forex')
 
-    stockIds = [...new Set(stockIds)]; // remove duplicates
+  return Promise.all([orders, positions, forex])
+    .then(data => ({
+      orders: data[0],
+      positions: data[1],
+      forex: data[2]
+    }))
+    .catch((e) => exitWithError('getBaseData failed', e))
+}
 
-    while (stockIds.length > 0) {
-        const currentStockIds = stockIds.splice(0, maxStockRequests);
-        const stockPromises = currentStockIds.map(id => getPortfolioData(token, `securities/${id}`));
-        await Promise.all(stockPromises)
-            .then(stocks => {
-                stocks.forEach(stock => {
-                    stocksData[stock.id] = stock;
-                })
-            })
+async function getStocksData (token, stockIds) {
+  const maxStockRequests = 5
+  const stocksData = {}
+
+  stockIds = [...new Set(stockIds)] // remove duplicates
+
+  while (stockIds.length > 0) {
+    log(` - ${stockIds.length} remaining`)
+    const currentStockIds = stockIds.splice(0, maxStockRequests)
+    const stockPromises = currentStockIds.map(id => getPortfolioData(token, `securities/${id}`))
+    await Promise.all(stockPromises)
+      .then(stocks => stocks.forEach(stock => { stocksData[stock.id] = stock }))
+      .catch((e) => exitWithError('getStocksData failed', e))
+  }
+
+  return stocksData
+}
+
+function toCad (currencyName, currencyAmount, usdToCad) {
+  if (currencyName === 'CAD') {
+    return currencyAmount
+  }
+  if (currencyName === 'USD') {
+    return currencyAmount * usdToCad
+  }
+  throw new Error(`Unknown currency: ${currencyName}`)
+}
+
+function combineAndDecoratePortfolioData (basePortfolioData, stocksData) {
+  const portfolioData = { ...basePortfolioData, stocks: stocksData }
+  const usdToCad = portfolioData.forex.USD.fx_rate
+
+  portfolioData.positions.forEach(position => {
+    const rawBookValue = position.market_book_value
+    const rawQuote = position.quote
+    const shareCount = position.quantity
+
+    const stockPriceCad = toCad(rawQuote.currency, Number(rawQuote.amount), usdToCad)
+    const bookValueCad = toCad(rawBookValue.currency, rawBookValue.amount, usdToCad)
+    const marketValueCad = stockPriceCad * shareCount
+
+    position.fundamentals = stocksData[position.id].fundamentals
+    position.shareCount = shareCount
+
+    position.marketPriceCad = stockPriceCad
+    position.marketValueCad = marketValueCad
+    position.bookValueCad = bookValueCad
+    position.bookPriceCad = bookValueCad / shareCount
+
+    const isUsdStock = position.currency === 'USD'
+    if (isUsdStock) {
+      position.marketPriceUsd = stockPriceCad / usdToCad
+      position.marketValueUsd = marketValueCad / usdToCad
+      position.bookValueUsd = bookValueCad / usdToCad
+      position.bookPriceUsd = position.bookPriceCad / usdToCad
     }
+  })
 
-    return stocksData;
+  return portfolioData
 }
 
-async function main() {
-    if (process.argv.length != 6) {
-        exit_with_error(`Usage: ${process.argv[0]} ${process.argv[1]} <email> <password> <file> <otp>`);
-    }
+async function main () {
+  if (process.argv.length !== 6) {
+    exitWithError(`Usage: ${process.argv[0]} ${process.argv[1]} <email> <password> <file> <otp>`)
+  }
 
-    const credentials = {
-        "email": process.argv[2],
-        "password": process.argv[3],
-        "otp": process.argv[5],
-    };
-    const destinationFile = process.argv[4];
-    const token = await getAuthToken(credentials);
+  const destinationFile = process.argv[4]
+  const credentials = {
+    email: process.argv[2],
+    password: process.argv[3],
+    otp: process.argv[5]
+  }
 
-    const orders = getPortfolioData(token, 'orders', "results");
-    const positions = getPortfolioData(token, 'account/positions', "results");
-    const forex = getPortfolioData(token, 'forex', null);
+  log('Fetching credentials')
+  const token = await getAuthToken(credentials)
+  log('Fetching base portfolio data')
+  const basePortfolioData = await getBaseData(token)
+  log('Fetching stock data')
+  const stockData = await getStocksData(token, basePortfolioData.positions.map(stockPosition => stockPosition.id))
 
-    const portfolioData = {};
-
-    await Promise.all([orders, positions, forex])
-        .then(data => {
-            portfolioData.orders = data[0];
-            portfolioData.positions = data[1];
-            portfolioData.forex = data[2];
-        })
-        .catch((e) => {exit_with_error("Could not aggregate orders+positions+forex responses", e)})
-        .then(() => getStocksData(token, portfolioData.positions.map(p => p.id)))
-        .then((stocksData) => {
-            portfolioData.stocks = stocksData;
-        })
-        .catch((e) => {exit_with_error("Could not aggregate stock responses", e)})
-        .then(() => {
-            const portfolioFile = `var portfolio = ${JSON.stringify(portfolioData, null, 4)};`;
-            fs.writeFileSync(require('path').resolve(process.cwd(), destinationFile), portfolioFile);
-        });
+  log('Saving portfolio data')
+  const fullPortfolioData = combineAndDecoratePortfolioData(basePortfolioData, stockData)
+  const portfolioFileContent = `this.portfolio = ${JSON.stringify(fullPortfolioData, null, 4)};`
+  fs.writeFileSync(require('path').resolve(process.cwd(), destinationFile), portfolioFileContent)
+  log('Done!')
 }
 
-main();
+main()
