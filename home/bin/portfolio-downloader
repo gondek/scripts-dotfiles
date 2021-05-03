@@ -48,7 +48,7 @@ async function getBaseData (token) {
 }
 
 async function getStocksData (token, stockIds) {
-  const maxStockRequests = 5
+  const maxStockRequests = 2
   const stocksData = {}
 
   stockIds = [...new Set(stockIds)] // remove duplicates
@@ -75,26 +75,47 @@ function toCad (currencyName, currencyAmount, usdToCad) {
   throw new Error(`Unknown currency: ${currencyName}`)
 }
 
+function getAccountName (rawName) {
+  if (rawName.startsWith('non-registered-')) {
+    return 'Cash'
+  } else if (rawName.startsWith('tfsa-')) {
+    return 'TFSA'
+  } else {
+    return `Unknown: ${rawName}`
+  }
+}
+
 function combineAndDecoratePortfolioData (basePortfolioData, stocksData) {
   const portfolioData = { ...basePortfolioData, stocks: stocksData }
   const usdToCad = portfolioData.forex.USD.fx_rate
+
+  let totalMarketValueCadEntirePortfolio = 0
+  const totalMarketValueCadByAccount = {}
 
   portfolioData.positions.forEach(position => {
     const rawBookValue = position.market_book_value
     const rawQuote = position.quote
     const shareCount = position.quantity
 
+    const fundamentals = (stocksData[position.id] || {}).fundamentals || {}
+    const accountName = getAccountName(position.account_id)
     const stockPriceCad = toCad(rawQuote.currency, Number(rawQuote.amount), usdToCad)
     const bookValueCad = toCad(rawBookValue.currency, rawBookValue.amount, usdToCad)
     const marketValueCad = stockPriceCad * shareCount
+    const dividendYield = fundamentals.yield
+    totalMarketValueCadEntirePortfolio += marketValueCad
+    totalMarketValueCadByAccount[accountName] = (totalMarketValueCadByAccount[accountName] || 0) + marketValueCad
 
-    position.fundamentals = stocksData[position.id].fundamentals
-    position.shareCount = shareCount
-
+    position.account = accountName
+    position.fundamentals = fundamentals
     position.marketPriceCad = stockPriceCad
     position.marketValueCad = marketValueCad
     position.bookValueCad = bookValueCad
     position.bookPriceCad = bookValueCad / shareCount
+    position.gainCad = marketValueCad - bookValueCad
+    position.gainPercent = 100 * position.gainCad / bookValueCad
+    position.yieldPercent = dividendYield * 100
+    position.yearlyDividendCad = dividendYield * marketValueCad
 
     const isUsdStock = position.currency === 'USD'
     if (isUsdStock) {
@@ -102,7 +123,14 @@ function combineAndDecoratePortfolioData (basePortfolioData, stocksData) {
       position.marketValueUsd = marketValueCad / usdToCad
       position.bookValueUsd = bookValueCad / usdToCad
       position.bookPriceUsd = position.bookPriceCad / usdToCad
+      position.gainUsd = position.marketValueUsd - position.bookValueUsd
+      position.yearlyDividendUsd = dividendYield * position.marketValueUsd
     }
+  })
+
+  portfolioData.positions.forEach(position => {
+    position.percentOfEntirePortfolio = 100 * position.marketValueCad / totalMarketValueCadEntirePortfolio
+    position.percentOfAccount = 100 * position.marketValueCad / totalMarketValueCadByAccount[position.account]
   })
 
   return portfolioData
