@@ -76,7 +76,11 @@ function toCad (currencyName, currencyAmount, usdToCad) {
 }
 
 function getAccountName (rawName) {
-  if (rawName.startsWith('non-registered-')) {
+  if (rawName.includes('crypto')) {
+    return 'Crypto'
+  } else if (rawName.includes('rrsp')) {
+    return 'RRSP'
+  } else if (rawName.startsWith('non-registered-')) {
     return 'Cash'
   } else if (rawName.startsWith('tfsa-')) {
     return 'TFSA'
