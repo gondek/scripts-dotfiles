@@ -19,7 +19,7 @@
       - ~/bin/*
 
   # apt packages
-  ##############
+  ###########################
   - name: install apt packages
     become: yes
     apt:
@@ -33,8 +33,7 @@
       - eyed3
       - ffmpeg
       - file-roller
-      - fish
-      - fonts-powerline
+      - gcc
       - gimp
       - git
       - gnome-disk-utility
@@ -44,24 +43,24 @@
       - libimage-exiftool-perl
       - libreoffice
       - pavucontrol
-      - powerline
       - silversearcher-ag
       - software-properties-gtk
       - sound-juicer
+      - tmux
       - transmission
       - vlc
       - wget
       - xournal
 
   # install n (node version management)
-  #########################
+  ###########################
   - name: download n (node version manager)
     git:
       repo: https://github.com/tj/n.git
       dest: ~/.n
 
   # make fish default shell
-  #########################
+  ###########################
   - name: make fish default shell
     become: yes
     user:
