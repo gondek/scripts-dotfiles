@@ -16,4 +16,3 @@
 - Browsers:
     - Install uBlock origin
     - Set search engine to DDG
-    - Set home page to projects status page
