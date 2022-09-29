@@ -2,7 +2,7 @@
 # Script to help setup song metadata
 # rubocop:disable LineLength
 
-REGEX_FILE_FORMAT = /\d\d - ([\w \-\.'\)\(]*[\w)])\.mp3/
+REGEX_FILE_FORMAT = /\d\d - ([\w \-\.'\)\(,]*[\w)])\.mp3/
 
 def exit_error(message)
   puts "Error: #{message}"
