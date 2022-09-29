@@ -2,11 +2,7 @@
 # Script to help setup song metadata
 # rubocop:disable LineLength
 
-STRING_STRIP_CHARS = ':!,\(\)\''.freeze
-STRING_VALID_CHARS = "#{STRING_STRIP_CHARS}&\\w\\-".freeze
-
-REGEX_STRIP_CHARS = /[#{STRING_STRIP_CHARS}]/
-REGEX_FILE_FORMAT = /\d\d - (\w[#{STRING_VALID_CHARS} ]*[#{STRING_VALID_CHARS}]).mp3/
+REGEX_FILE_FORMAT = /\d\d - ([\w \-\.'\)\(]*[\w)])\.mp3/
 
 def exit_error(message)
   puts "Error: #{message}"
@@ -18,10 +14,6 @@ def prompt_and_wrap_quotes(message)
   result = gets.strip
   exit_error('invalid empty input') if result.empty?
   "\"#{result}\""
-end
-
-def clean_filename(filename)
-  filename.gsub(REGEX_STRIP_CHARS, '').gsub(/[&]/, 'and')
 end
 
 def filename_valid?(name, expected_digit)
@@ -52,9 +44,6 @@ def set_song_metadata
     track_number += 1
     title = filename.match(REGEX_FILE_FORMAT).captures[0].strip
     system "eyeD3 -t \"#{title}\" -n #{track_number} \"#{filename}\""
-    if filename != clean_filename(filename)
-      system "mv \"#{filename}\" \"#{clean_filename(filename)}\""
-    end
   end
 end
 
