@@ -1,3 +1,4 @@
+- Swtich Firefox from snap to deb
 - Fish shell setup:
     - PPA: https://launchpad.net/~fish-shell/+archive/ubuntu/release-3
     - Tide prompt: https://github.com/IlanCosman/tide#installation
@@ -5,10 +6,8 @@
 - XFCE Customizations:
     - `xfconf-query -c xsettings -p /Gtk/DialogsUseHeader -s false`
     - `open ~/.config/xfce4/terminal/accels.scm` and edit `"terminal-window/copy"` and `"terminal-window/paste"` entries
-- Manual installation & setup:
-    - Printer Driver (Dell-1130 / Samsung ML-1915, 2.0.0 / Samsung ML-2525, 2.0.0)
-    - Activate firewall: `sudo ufw enable`
-    - Redshift / Flux (color management app)
+- Printer Driver (Dell-1130 / Samsung ML-1915, 2.0.0 / Samsung ML-2525, 2.0.0)
+- Activate firewall: `sudo ufw enable`
 - Startup configuration:
     - "Software & Updates" > "Updates" > automatically check for updates
 - Customization:
