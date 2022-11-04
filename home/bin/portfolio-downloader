@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-const home = process.env.HOME
-const axios = require(home + '/.n/lib/node_modules/axios').default
+const axios = require('axios').default || require('axios')
 const fs = require('fs')
+const readline = require('readline')
 
 const wealthSimpleHost = 'https://trade-service.wealthsimple.com'
 
@@ -16,21 +16,33 @@ function exitWithError (message, moreDetails) {
   process.exit(1)
 }
 
+function promptFor(inputName) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  return new Promise(resolve => {
+    rl.question(`${inputName}: `, answer => {
+      rl.close()
+      resolve(answer)
+    })
+  })
+
+}
+
 async function getAuthToken (credentials) {
   return axios.post(`${wealthSimpleHost}/auth/login`, credentials)
-    .then((response) => {
-      return response.headers['x-access-token']
-    })
-    .catch((e) => exitWithError('Could not authenticate', e))
+      .then((response) => {
+        return response.headers['x-access-token']
+      })
+      .catch((e) => exitWithError('Could not authenticate', e))
 }
 
 async function getPortfolioData (token, type, dataPath) {
   return axios.get(`${wealthSimpleHost}/${type}`, { headers: { Authorization: token } })
-    .then((response) => {
-      const portfolioData = dataPath ? response.data[dataPath] : response.data
-      return portfolioData
-    })
-    .catch((e) => exitWithError('getPortfolioData failed for getPortfolioData @ ' + type, e))
+      .then((response) =>  dataPath ? response.data[dataPath] : response.data)
+      .catch((e) => exitWithError('getPortfolioData failed for getPortfolioData @ ' + type, e))
 }
 
 async function getBaseData (token) {
@@ -39,12 +51,12 @@ async function getBaseData (token) {
   const forex = getPortfolioData(token, 'forex')
 
   return Promise.all([orders, positions, forex])
-    .then(data => ({
-      orders: data[0],
-      positions: data[1],
-      forex: data[2]
-    }))
-    .catch((e) => exitWithError('getBaseData failed', e))
+      .then(data => ({
+        orders: data[0],
+        positions: data[1],
+        forex: data[2]
+      }))
+      .catch((e) => exitWithError('getBaseData failed', e))
 }
 
 async function getStocksData (token, stockIds) {
@@ -58,8 +70,8 @@ async function getStocksData (token, stockIds) {
     const currentStockIds = stockIds.splice(0, maxStockRequests)
     const stockPromises = currentStockIds.map(id => getPortfolioData(token, `securities/${id}`))
     await Promise.all(stockPromises)
-      .then(stocks => stocks.forEach(stock => { stocksData[stock.id] = stock }))
-      .catch((e) => exitWithError('getStocksData failed', e))
+        .then(stocks => stocks.forEach(stock => { stocksData[stock.id] = stock }))
+        .catch((e) => exitWithError('getStocksData failed', e))
   }
 
   return stocksData
@@ -141,15 +153,19 @@ function combineAndDecoratePortfolioData (basePortfolioData, stocksData) {
 }
 
 async function main () {
-  if (process.argv.length !== 6) {
-    exitWithError(`Usage: ${process.argv[0]} ${process.argv[1]} <email> <password> <file> <otp>`)
+  if (process.argv.length !== 4) {
+    exitWithError(`Usage: ${process.argv[0]} ${process.argv[1]} <email> <file>`)
   }
 
-  const destinationFile = process.argv[4]
+  const destinationFile = process.argv[3]
+
+
+  const password = await promptFor("Password")
+  const totp = await promptFor("TOTP")
   const credentials = {
     email: process.argv[2],
-    password: process.argv[3],
-    otp: process.argv[5]
+    password: password,
+    otp: totp
   }
 
   log('Fetching credentials')
