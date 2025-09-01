@@ -16,7 +16,7 @@
       path: "{{ item }}"
       mode: 0755
     with_fileglob:
-      - ~/bin/*
+      - ~/bin/*.*
 
   # apt packages
   ###########################
@@ -30,7 +30,6 @@
       - ack-grep
       - audacity
       - curl
-      - eyed3
       - ffmpeg
       - file-roller
       - gcc
@@ -39,8 +38,6 @@
       - gnome-disk-utility
       - handbrake
       - htop
-      - imagemagick
-      - libimage-exiftool-perl
       - libreoffice
       - pavucontrol
       - silversearcher-ag
