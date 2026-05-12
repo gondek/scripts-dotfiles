@@ -49,13 +49,6 @@
       - wget
       - xournal
 
-  # install n (node version management)
-  ###########################
-  - name: download n (node version manager)
-    git:
-      repo: https://github.com/tj/n.git
-      dest: ~/.n
-
   # make fish default shell
   ###########################
   - name: make fish default shell
