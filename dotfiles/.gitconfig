@@ -1,0 +1,12 @@
+[user]
+	name = Alex Gondek
+	email = alexgondek@gmail.com
+[push]
+	autoSetupRemote = true
+[alias]
+	ls = log --graph --pretty=format:'%C(green)%h%C(reset) %C(yellow)%<(22)%cr%C(reset) %s'
+	ll = log --graph --date=short --pretty=format:'%C(green)%h%C(reset) %<(80,trunc)%s %C(yellow)(%an %cd)%C(reset)%C(auto)%d'
+[include]
+	# Per-machine settings, like commit signing with this machine's SSH key (set up by the
+	# ssh stage). Without the file, commits just go unsigned.
+	path = ~/.gitconfig.local
